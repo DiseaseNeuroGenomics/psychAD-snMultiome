@@ -26,9 +26,9 @@ Please cite the following:
 [TBD]
 ```
 ## contact
-For questions regarding the analysis code, processed data, or computational methods, please contact:
-Pengfei Dong
-Center for Disease Neurogenomics
-Icahn School of Medicine at Mount Sinai
-Email: pengfei.dong@mssm.edu
+For questions regarding the analysis code, processed data, or computational methods, please contact:\
+Pengfei Dong\
+Center for Disease Neurogenomics\
+Icahn School of Medicine at Mount Sinai\
+Email: pengfei.dong@mssm.edu\
 
