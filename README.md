@@ -21,7 +21,8 @@ PsychAD-snMultiome/
 │   ├── 02_Dx_decomposed/.       # `Dx_cell`-state-resolved pseudobulk analyses
 │   └── 03_regulon_priorite/     # Integration of TF expression, GRN & TF motif activity
 ├── 05_donor_axes/.              # Donor transcriptional axes
-├── 06_external_validation/.     # Projection, replication and validation analyses in external cohorts and datasets
+├── 06_external_validation/      # Projection, replication and validation analyses in external cohorts and datasets
+├── img/
 └── README.md
 ```
 
