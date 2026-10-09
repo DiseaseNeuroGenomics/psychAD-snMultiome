@@ -67,14 +67,6 @@ The group-level mean `Dx_cell` values may still reflect `Dx_donor` and `Dx_dev` 
 
 The **complete DEG and DAC results will be shared through Synapse**, rather than duplicated as large tables in GitHub. Where possible, these files will contain **all tested genes or chromatin features**, not just significant hits, with feature identifiers, the tested comparison and cell population, effect estimates, nominal and adjusted P values, and relevant model and annotation information. -->
 
-## Data, and frozen models
-
-| Resource | Contents | Availability |
-|---|---|---|
-| [PsychAD study on Synapse (syn52160016)](https://www.synapse.org/Synapse:syn52160016) | Raw and processed multiome data, cell- and sample-level metadata, and intended complete DEG/DAC analysis outputs | **Submission in progress.** This link currently identifies the broader MSSM_PsychAD study folder; file-level accessions and permissions for this dataset should be confirmed after deposition. |
-| [UCSC Cell Browser: PsychAD snMultiome](https://cells.ucsc.edu/?ds=psychad-snmultiome) | Interactive visualization of processed single-nucleus data, annotations, and available score fields | Browser link supplied by the study authors. Confirm public visibility and displayed content before release. |
-| [Zenodo: frozen Dx_cell models](https://zenodo.org/records/23190790) | Fixed model artifacts for reproducing Dx_cell predictions | Record link supplied by the study authors. **Verify record availability, artifact checksums, and correspondence to the manuscript models** before release. |
-
 ## citation
 Please cite the following:
 ```
