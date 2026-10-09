@@ -31,7 +31,8 @@ PsychAD-snMultiome/
 <p align="center">
   <img src="img/Dx_measurements_schematic.png" width="80%" alt="Conceptual overview of Dx measurements">
 </p>
-**Figure. 1 Conceptual relationships across analytical scales.** `Dx_donor` summarizes measured neuropathology and is defined independently of the transcriptomic scores. The pathology-supervised `Dx_cell` score positions individual cells along a continuum of disease-associated transcriptional states. At the sample × cell-class level, `Dx_dev` characterizes deviations in average `Dx_cell` after adjustment for `Dx_donor` and other model covariates. In state-resolved pseudobulk analysis, the mean `Dx_cell` of each Dx-decomposed group retains between-sample differences, whereas `Dx_contrast` centers the group-level scores within each sample and cell class. The arrows in the schematic are conceptual; they do not imply that `Dx_donor` is derived from `Dx_cell`.
+
+**Figure 1 | Conceptual relationships across analytical scales.** `Dx_donor` summarizes measured neuropathology and is defined independently of the transcriptomic scores. The pathology-supervised `Dx_cell` score positions individual cells along a continuum of disease-associated transcriptional states. At the sample × cell-class level, `Dx_dev` characterizes deviations in average `Dx_cell` after adjustment for `Dx_donor` and other model covariates. In state-resolved pseudobulk analysis, the mean `Dx_cell` of each Dx-decomposed group retains between-sample differences, whereas `Dx_contrast` centers the group-level scores within each sample and cell class. The arrows in the schematic are conceptual; they do not imply that `Dx_donor` is derived from `Dx_cell`.
 
 ### Key measurements
 
