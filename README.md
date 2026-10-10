@@ -59,9 +59,9 @@ The group-level mean `Dx_cell` values may still reflect `Dx_donor` and `Dx_dev` 
 
 | Resource | Contents | Access / status |
 | --- | --- | --- |
-| [MSSM PsychAD study on Synapse (syn52160016)](https://www.synapse.org/Synapse:syn52160016) | Raw and processed RNA/ATAC data, associated metadata and complete differential-analysis results | **Data submission in progress.** We expect to place the multiome dataset within the existing MSSM PsychAD study folder. File-level identifiers and any access restrictions will be provided when deposition is complete. |
-| [PsychAD snMultiome UCSC Cell Browser](https://cells.ucsc.edu/?ds=psychad-snmultiome) | Interactive exploration of processed single-nucleus data and available annotations | Interactive browser (content and public access should be confirmed before release). |
-| [Frozen Dx_cell models on Zenodo](https://zenodo.org/records/23190790) | Frozen model artifacts intended for reuse or projection of `Dx_cell` | Model record (confirm its availability and the specific model files before release). |
+| [MSSM PsychAD study on Synapse (syn52160016)](https://www.synapse.org/Synapse:syn52160016) | Raw and processed RNA/ATAC data, associated metadata and complete differential-analysis results | **Data submission in progress.** |
+| [PsychAD snMultiome UCSC Cell Browser](https://cells.ucsc.edu/?ds=psychad-snmultiome) | Interactive exploration of processed single-nucleus data and available annotations | Interactive browser (will be avaliable soon) |
+| [Frozen Dx_cell models on Zenodo](https://zenodo.org/records/23190790) | Frozen model artifacts intended for reuse or projection of `Dx_cell` | Model record |
 
 
 <!-- ### Differential expression and chromatin accessibility results 
