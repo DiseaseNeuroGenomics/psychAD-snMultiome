@@ -18,9 +18,9 @@ PsychAD-snMultiome/
 ├── 03_Dx_dev/                   # Dx_dev, cell composition and cognitive outcomes  
 ├── 04_differential_analysis/
 │   ├── 01_conventional/         # Conventional pseudobulk differential analyses and variance partitioning
-│   ├── 02_Dx_decomposed/.       # `Dx_cell`-state-resolved pseudobulk analyses
+│   ├── 02_Dx_decomposed/        # `Dx_cell`-state-resolved pseudobulk analyses
 │   └── 03_regulon_priorite/     # Integration of TF expression, GRN & TF motif activity
-├── 05_donor_axes/.              # Donor transcriptional axes
+├── 05_donor_axes/               # Donor transcriptional axes
 ├── 06_external_validation/      # Projection, replication and validation analyses in external cohorts and datasets
 ├── img/
 └── README.md
@@ -33,27 +33,16 @@ PsychAD-snMultiome/
   <img src="img/Dx_measurements_schematic.png" width="80%" alt="Conceptual overview of Dx measurements">
 </p>
 
-**Figure 1 | Conceptual relationships across analytical scales.** `Dx_donor` summarizes measured neuropathology and is defined independently of the transcriptomic scores. The pathology-supervised `Dx_cell` score positions individual cells along a continuum of disease-associated transcriptional states. At the sample × cell-class level, `Dx_dev` characterizes deviations in average `Dx_cell` after adjustment for `Dx_donor` and other model covariates. In state-resolved pseudobulk analysis, the mean `Dx_cell` of each Dx-decomposed group retains between-sample differences, whereas `Dx_contrast` centers the group-level scores within each sample and cell class. The arrows in the schematic are conceptual; they do not imply that `Dx_donor` is derived from `Dx_cell`.
+**Figure 1 | Conceptual relationships among disease-associated measurements across analytical scales.** Dx_cell is a pathology-supervised transcriptomic score that positions individual cells along a continuum of disease-associated states, from control-like to late-like. Variation in Dx_cell can be characterized across three complementary scales. First, Dx_donor summarizes independently measured neuropathological burden, capturing pathology-associated differences in cellular states across donors. Second, Dx_dev quantifies deviations in sample-level mean Dx_cell from values expected based on Dx_donor and other covariates, capturing pathology-adjusted differences in cellular responses between samples. Third, Dx_contrast captures within-sample heterogeneity by centering the mean Dx_cell of control-like, early-like, and late-like pseudobulk groups within each sample and cell class. Unlike the group-level mean Dx_cell, which retains pathology-associated and pathology-adjusted between-sample variation, Dx_contrast removes shared additive sample-level effects and isolates relative differences among coexisting cellular states. Together, these complementary measurements distinguish disease-associated variation across donor, sample, and within-sample cellular-state scales.
 
 ### Key measurements
 
 | Measurement | Analytical level | Interpretation |
 | --- | --- | --- |
-| **`Dx_donor`** | Donor / sample pathology | Score summarizing measured AD neuropathological burden; used as supervision for the `Dx_cell` model. |
 | **`Dx_cell`** | Individual cell; averaged within pseudobulk groups | RNA-derived, pathology-supervised cellular disease-state score. Group-level averages retain between-sample pathology-associated and pathology-adjusted variation. |
+| **`Dx_donor`** | Donor / sample pathology | Score summarizing measured AD neuropathological burden; used as supervision for the `Dx_cell` model. |
 | **`Dx_dev`** | Sample × cell class | Pathology-adjusted deviation in mean `Dx_cell`, estimated using the specified regression model and covariates. |
 | **`Dx_contrast`** | Dx-decomposed group within sample × cell class | Group-level mean `Dx_cell` centered relative to the other decomposed groups in the same sample and cell class. |
-
-For a sample and cell class partitioned into control-like, early-like and late-like groups, let $\bar{x}_C$, $\bar{x}_E$ and $\bar{x}_L$ denote their respective group-level mean `Dx_cell` values. The figure illustrates centering by the mean of the three group means:
-
-$$
-\bar{x} = \frac{\bar{x}_C + \bar{x}_E + \bar{x}_L}{3},
-\qquad
-\mathrm{Dx}_{\mathrm{contrast},g} = \bar{x}_g - \bar{x},
-\quad g \in \{C,E,L\}.
-$$
-
-The group-level mean `Dx_cell` values may still reflect `Dx_donor` and `Dx_dev` effects. Centering removes **additive effects shared across the groups within a sample and cell class**; it does **not** establish that `Dx_contrast` is statistically independent of pathology or `Dx_dev` (for example, the separation among groups may itself change with pathology). The exact group-centering and weighting convention should match the released analysis code and the manuscript Methods.
 
 ## Data and model availability
 
@@ -79,3 +68,4 @@ Pengfei Dong\
 Center for Disease Neurogenomics\
 Icahn School of Medicine at Mount Sinai\
 Email: pengfei.dong@mssm.edu
+
