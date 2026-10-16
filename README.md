@@ -12,8 +12,7 @@ PsychAD-snMultiome/
 │   ├── 01_metadata/             # Sample/Donor metadata (Dx_donor)
 │   ├── 02_preprocessing/        # ambient RNA correction & doublet removal
 │   ├── 03_taxonomy/             # RNA/ATAC cell type annotation
-│   ├── 04_spatial_annotation/   # cortical layer annotation
-│   └── 05_motif_classify/       # subclass-level TF-binding motif classifer
+│   └── 04_motif_classify/       # subclass-level TF-binding motif classifer
 ├── 02_cellular_disease_score/   # Construction, and application of the Dx_cell.
 ├── 03_Dx_dev/                   # Dx_dev, cell composition and cognitive outcomes  
 ├── 04_differential_analysis/
