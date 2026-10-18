@@ -117,14 +117,26 @@ for cell in 'Vascular','EN','IN','Immune','OPC','Astro','Oligo':
         cluster_name=cluster_names[i]
         sc.tl.leiden(mdata, resolution=res,neighbors_key='wnn',key_added='wnn'+cluster_name)
         sns.set_style("white")
-        adata.obs[f'wnn{cluster_name}']=np.nan
-        adata.obs.loc[mdata.obs.index,f'wnn{cluster_name}']=mdata.obs[f'wnn{cluster_name}']
+
         rna.obs[f'wnn{cluster_name}']=np.nan
         rna.obs.loc[mdata.obs.index,f'wnn{cluster_name}']=mdata.obs[f'wnn{cluster_name}']
-        z=myutsc.naming_cell_type(adata.obs,f'wnn{cluster_name}',f'{cluster_name}',rename_ref=True,adjMat=adata.obsp['connectivities'])
-        plt.show()
-        z=myutsc.naming_cell_type(rna.obs,f'wnn{cluster_name}',f'{cluster_name}',rename_ref=True,adjMat=rna.obsp['connectivities'])
-        plt.show()   
+        
+        query=rna[rna.obs[f'wnn{cluster_name}'].isna(),]
+        ref=rna[~rna.obs[f'wnn{cluster_name}'].isna(),]
+        sc.pp.neighbors(ref, use_rep = "X_pca_harmony",n_neighbors=nnb)
+        pred=myutsc.injest_from_same_cohort(ref,query,use_rep='X_pca_harmony',n_pcs=npc,
+                            epsilon=0.1,obs='wnn{cluster_name}')
+        rna.obs.loc[query.obs_names,f'wnn{cluster_name}']=pred.obs[f'pred_wnn{cluster_name}']
+
+        adata.obs[f'wnn{cluster_name}']=np.nan
+        adata.obs.loc[mdata.obs.index,f'wnn{cluster_name}']=mdata.obs[f'wnn{cluster_name}']
+        query=adata[adata.obs[f'wnn{cluster_name}'].isna(),]
+        ref=adata[~adata.obs[f'wnn{cluster_name}'].isna(),]
+        sc.pp.neighbors(ref, use_rep = "X_pca_harmony",n_neighbors=nnb)
+        pred=myutsc.injest_from_same_cohort(ref,query,use_rep='X_pca_harmony',n_pcs=npc,
+                            epsilon=0.1,obs=f'wnn{cluster_name}')
+        adata.obs.loc[query.obs_names,f'wnn{cluster_name}']=pred.obs[f'pred_wnn{cluster_name}']
+    
     adata.write(atac_folder+'/'+cell+'_qc01.h5ad')
     rna.write(f'RNA_2nd_subset_{cell}_wnn.h5ad')
     mdata.write(cell+'_mudata_2.h5mu')    
@@ -133,21 +145,28 @@ for cell in 'Vascular','EN','IN','Immune','OPC','Astro','Oligo':
     res=ress[i]
     cluster_name=cluster_names[i]
     
-    adata.obs['inRNA']=rna.obs.index.isin(rna.obs.index)
+    adata.obs['inRNA']=adata.obs.index.isin(rna.obs.index)
     adata.obs['ref']=adata.obs.inRNA*(np.random.uniform(size=adata.obs.shape[0])>0.2)
     adata.obs['validation']=adata.obs.inRNA*(~adata.obs.ref)
     adata.obs[f'wnn{cluster_name}']=np.nan
     adata.obs.loc[adata.obs.ref,f'wnn{cluster_name}']=mdata.obs.loc[adata.obs.loc[adata.obs.ref].obs_names,f'wnn{cluster_name}']
-    z=myutsc.naming_cell_type(adata.obs,f'wnn{cluster_name}',f'{cluster_name}',rename_ref=True,adjMat=adata.obsp['connectivities'])    
-    confusion_matrix=pd.crosstab(adata.obs.loc[adata.obs.validation,f'wnn{cluster_name}'],
-                                 mdata.obs.loc[adata.obs.validation,f'wnn{cluster_name}'])
+    
+    query=adata[adata.obs[f'wnn{cluster_name}'].isna(),]
+    ref=adata[~adata.obs[f'wnn{cluster_name}'].isna(),]
+    sc.pp.neighbors(ref, use_rep = "X_pca_harmony",n_neighbors=nnb)
+    pred=myutsc.injest_from_same_cohort(ref,query,use_rep='X_pca_harmony',n_pcs=npc,
+                            epsilon=0.1,obs=f'wnn{cluster_name}')
+    confusion_matrix=pd.crosstab(mdata.obs.loc[pred[pred.obs.validation,].obs_names,f'wnn{cluster_name}'],
+             pred.obs.loc[pred[pred.obs.validation,].obs_names,f'pred_wnn{cluster_name}'])
     ind=np.intersect1d(confusion_matrix.index.values,confusion_matrix.columns.values)
     correct_ratio=np.sum(confusion_matrix.loc[ind,ind].values.diagonal())/confusion_matrix.sum().sum()
-    ariv=ari(adata.obs.loc[adata.obs.validation,f'wnn{cluster_name}'],
-                                 mdata.obs.loc[adata.obs.validation,f'wnn{cluster_name}'])
+    ariv=ari(mdata.obs.loc[pred[pred.obs.validation,].obs_names,f'wnn{cluster_name}'],
+             pred.obs.loc[pred[pred.obs.validation,].obs_names,f'pred_wnn{cluster_name}'])
+
     ARI.append(ariv)
     CR.append(correct_ratio)   
 
 met={'ARI':ARI,'correct_ratio':CR,'class':['Vascular','EN','IN','Immune','OPC','Astro','Oligo']}
 met=pd.DataFrame(met)
 met.to_csv('class_ATAC_ARI_correct_ratio.csv')
+

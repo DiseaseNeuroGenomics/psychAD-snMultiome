@@ -67,4 +67,7 @@ Pengfei Dong\
 Center for Disease Neurogenomics\
 Icahn School of Medicine at Mount Sinai\
 Email: pengfei.dong@mssm.edu
+## License
 
+The source code in this repository is distributed under
+the [MIT License](LICENSE).

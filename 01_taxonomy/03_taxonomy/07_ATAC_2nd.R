@@ -1,4 +1,4 @@
-.libPaths(c(.libPaths(),'/sc/arion/projects/roussp01a/pengfei/tools/R_4_0_3'))
+.libPaths(c(.libPaths(),'/sc/arion/projects/roussp01a/pengfei/tools/R_4_4_1'))
 library(ArchR)
 source('/sc/arion/projects/roussp01a/pengfei/tools/myArchR.R')
 addArchRThreads(threads = 12)
@@ -34,9 +34,9 @@ peak=readRDS(paste0(root,'/PeakCalls/',peak_name,'-reproduciblePeaks.gr.rds'))# 
 ################filter by cell
 dir.create(paste0('fine_cluster/',cell),recursive = T)
 setwd(paste0('fine_cluster/',cell))
-a=table(AD3BR@cellColData$order[AD3BR@cellColData[,cell_anno]==cell])
+a=table(AD3BR@cellColData$order[AD3BR@cellColData[,cell_anno]==cell]) # order is the sampleID
 a=a[a>1]
-AD3BR=AD3BR[BiocGenerics::which(AD3BR@cellColData$order%in%names(a)),]
+AD3BR=AD3BR[BiocGenerics::which(AD3BR@cellColData$order%in%names(a)),] # order is the sampleID
 AD3BR@sampleColData=AD3BR@sampleColData[rownames(AD3BR@sampleColData)%in%names(a),,drop=F]
 AD3BR@sampleMetadata=AD3BR@sampleMetadata[names(AD3BR@sampleMetadata)%in%names(a)]
 AD3BR=AD3BR[BiocGenerics::which(AD3BR@cellColData[,cell_anno]==cell),]
@@ -58,7 +58,7 @@ AD3BR <- addIterativeLSI_with_seurat(
   dimsToUse = 1:10,
   projectCellsPre=F,
   sampleCellsFinal=min(3e5,nrow(AD3BR@cellColData)),
-  inputPeak=peak
+  inputPeak=peak # only use the peak from its cell class
 )
 ######################
 AD3BR@reducedDims$IterativeLSI$matSVD=scale(AD3BR@reducedDims$IterativeLSI$matSVD[,-1])

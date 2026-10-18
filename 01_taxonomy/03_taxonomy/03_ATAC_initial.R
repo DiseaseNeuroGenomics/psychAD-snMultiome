@@ -1,4 +1,4 @@
-.libPaths(c(.libPaths(),'/sc/arion/projects/roussp01a/pengfei/tools/R_4_0_3'))
+.libPaths(c(.libPaths(),'/sc/arion/projects/roussp01a/pengfei/tools/R_4_4_1'))
 library(ArchR)
 library(BSgenome.Hsapiens.UCSC.hg38)
 library(rhdf5)
@@ -29,7 +29,7 @@ metaInfo=metaInfo[metaInfo$Estimated.number.of.cells>200 & metaInfo$Estimated.nu
 sample=metaInfo$newID
 ArrowFiles <- createArrowFiles(
   inputFiles = metaInfo$inputFiles,
-  sampleNames = metaInfo$order,
+  sampleNames = metaInfo$order, ## order is the sampleID
   filterTSS = 1, #Dont set this too high because you can always increase later
   filterFrags = 1000, 
   addTileMat = TRUE,
@@ -95,7 +95,7 @@ AD3BR=AD3BR[BiocGenerics::which(AD3BR@cellColData$order%in%names(a)[a>200]),]
 AD3BR@sampleColData=AD3BR@sampleColData[rownames(AD3BR@sampleColData)%in%names(a)[a>200],,drop=F]
 AD3BR@sampleMetadata=AD3BR@sampleMetadata[names(AD3BR@sampleMetadata)%in%names(a)[a>200]]
 AD3BR <- myaddPeakMatrix(AD3BR) # add peak matrix with PIC https://doi.org/10.1038/s41592-023-02103-7
-AD3BR <- addIterativeLSI_with_seurat(
+AD3BR <- addIterativeLSI_with_seurat( # we customed the code from ArchR to perform harmony before variable feature selection, this avoid prioritze sample specific features as variable features. 
   ArchRProj = AD3BR,
   useMatrix = "PeakMatrix", 
   name = "IterativeLSI", 
@@ -113,7 +113,7 @@ AD3BR <- addIterativeLSI_with_seurat(
   projectCellsPre=TRUE,
   sampleCellsFinal=3e5
 )
-AD3BR@reducedDims$IterativeLSI$matSVD=scale(AD3BR@reducedDims$IterativeLSI$matSVD[,-1])
+AD3BR@reducedDims$IterativeLSI$matSVD=scale(AD3BR@reducedDims$IterativeLSI$matSVD[,-1]) # 1st LSI were removed
 colnames(AD3BR@reducedDims$IterativeLSI$matSVD)=paste0('LSI',1:ncol(AD3BR@reducedDims$IterativeLSI$matSVD))
 AD3BR@reducedDims$IterativeLSI$nDimensions=AD3BR@reducedDims$IterativeLSI$nDimensions-1
 AD3BR@reducedDims$IterativeLSI$svd$d=AD3BR@reducedDims$IterativeLSI$svd$d[-1]
