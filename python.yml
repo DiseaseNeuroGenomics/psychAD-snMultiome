@@ -13,6 +13,7 @@ dependencies:
   - h5py=3.8.0=nompi_py38hd5fa8ee_100
   - harmonypy=0.0.9=pyhdfd78af_0
   - igraph=0.10.3=hb9ddf80_0
+  - joblib=1.3.2=pyhd8ed1ab_0
   - leidenalg=0.9.1=py38h8dc9893_0
   - macs2=2.2.7.1=py38hbff2b2d_4
   - matplotlib-base=3.7.2=py38hf5b0b65_0
@@ -38,3 +39,4 @@ dependencies:
       - muon==0.1.2
       - pegasusio==0.8.0
       - pegasuspy==1.7.1
+      - pyranges==0.1.2
