@@ -7,22 +7,28 @@ This repository contains the analysis workflows associated with the PsychAD sing
 ## Repository organization
 
 ```text
+
 PsychAD-snMultiome/
-├── 01_taxonomy/    
-│   ├── 01_metadata/             # Sample/Donor metadata (Dx_donor)
-│   ├── 02_preprocessing/        # ambient RNA correction & doublet removal
-│   ├── 03_taxonomy/             # RNA/ATAC cell type annotation
-│   └── 04_motif_classify/       # subclass-level TF-binding motif classifer
-├── 02_cellular_disease_score/   # Construction, and application of the Dx_cell.
-├── 03_Dx_dev/                   # Dx_dev, cell composition and cognitive outcomes  
-├── 04_differential_analysis/
-│   ├── 01_conventional/         # Conventional pseudobulk differential analyses and variance partitioning
-│   ├── 02_Dx_decomposed/        # `Dx_cell`-state-resolved pseudobulk analyses
-│   └── 03_regulon_priorite/     # Integration of TF expression, GRN & TF motif activity
-├── 05_donor_axes/               # Donor transcriptional axes
-├── 06_external_validation/      # Projection, replication and validation analyses in external cohorts and datasets
-├── img/
-└── README.md
+├── 01_taxonomy/
+│   ├── 01_metadata/              # Sample/donor metadata and Dx_donor construction
+│   ├── 02_preprocessing/         # Ambient RNA correction, QC, and doublet removal
+│   ├── 03_taxonomy/              # RNA/ATAC-based cell-type annotation and taxonomy refinement
+│   └── 04_motif_classify/        # TF motif-based subclass classification
+│
+├── 02_cellular_disease_score/    # Dx_cell model training, validation, and projection
+│
+├── 03_differential_analysis/
+│   ├── 01_conventional/         # Conventional pseudobulk analysis and variance partitioning
+│   ├── 02_Dx_decomposed/        # Dx_cell-state-resolved pseudobulk differential analysis
+│   └── 03_regulon_prioritization/ # TF prioritization integrating expression, motif activity, and GRNs
+│
+├── 04_Dx_dev_donor_axes/
+│   ├── 01_Dx_dev/              # Estimation of cell-class-specific pathology-adjusted responses
+│   ├── 02_donor_axes/          # Identification of donor-associated transcriptional programs
+│   ├── 03_external/            # External validation of Dx_dev and donor-associated axes
+│   └── 04_summary/             # Associations with molecular, cellular, and clinical phenotypes
+│
+└── 05_demo/                     # Demonstrations using external datasets and pretrained models
 ```
 
 ## Conceptual overview of disease-related measurements

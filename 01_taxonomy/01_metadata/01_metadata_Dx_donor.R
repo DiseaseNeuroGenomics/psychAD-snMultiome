@@ -1,8 +1,6 @@
 .libPaths(c('/sc/arion/projects/roussp01a/pengfei/tools/R_4_4_1',.libPaths()))
-library(dreamlet)
 library(ordinal)
 library(ggplot2)
-
 setwd('/sc/arion/projects/CommonMind/roussp01a/snmulti/DE/metadata')
 metaInfo=read.csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/step2/files/allInfo_11102023.csv',row.names=1)
 full_meta=read.csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/step2/metadata/clinical_metadata.csv')
