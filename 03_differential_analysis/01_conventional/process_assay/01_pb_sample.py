@@ -1,12 +1,19 @@
 
 import numpy as np
 import scanpy as sc
-import scanpy.external as sce
 import pandas as pd
-import sys
 import os
 from scipy import sparse
-os.chdir('/sc/arion/projects/CommonMind/roussp01a/snmulti/step3/files')
+import argparse
+parser = argparse.ArgumentParser(description='h5ad to pseudobulk')
+
+parser.add_argument('--input', help='Input h5ad file, X is raw counts', required=True)
+parser.add_argument('--cellanno', help='cell type anno csv file including class subclass subtype', required=True)
+parser.add_argument('--outDir', help='Output dir', required=True)
+parser.add_argument('--outPrefix', help='output prefix', required=True)
+parser.add_argument('--sampleCol', help='sampleID column', default='order')
+parser.add_argument('--ATAC', action='store_true', default=False) 
+args = parser.parse_args()
 sc.settings.verbosity = 3             # verbosity: errors (0), warnings (1), info (2), hints (3)
 sc.logging.print_header()
 ##
@@ -42,31 +49,38 @@ def get_by_cell(pseduobulk,ncells,newid):
         ncell[x].set_index('sample',inplace=True)
     return pbs,ncell
 ####
-raw_path='RNA_all.h5ad'
-#wnn_path='wnn_cell_anno_05062024_filter.csv'
-wnn_path='ML_cellstate3/lgb_anno.csv'
+raw_path=args.input
+wnn_path=args.cellanno
+outputdir=args.outDir
+output_prefix=args.outPrefix
 adata=sc.read_h5ad(raw_path)
 wnn_cluster=pd.read_csv(wnn_path,index_col=0)
-wnn_cluster=wnn_cluster.loc[~wnn_cluster['class'].eq('Mural')]
+if args.ATAC:
+    wnn_cluser=wnn_cluster.loc[wnn_cluster.inATAC]
+else:
+    wnn_cluster=wnn_cluster.loc[wnn_cluster.inRNA] 
 ###########################
 sel=np.intersect1d(adata.obs.index,wnn_cluster.index)
 adata=adata[sel,]
+
 adata.obs['subclass']=wnn_cluster.loc[sel,'subclass']
 adata.obs['subtype']=wnn_cluster.loc[sel,'subtype']
 adata.obs['class']=wnn_cluster.loc[sel,'class']
-adata.obs['Dx_cat_cell']=wnn_cluster.loc[sel,'Dx_cat_cell']
-adata.obs['sampleDx']=adata.obs['order'].astype('str')+'_'+adata.obs['Dx_cat_cell'].astype('str') #order is sample ID
+adata.obs['sample']=adata.obs[args.sampleCol].astype('str') #order is sample ID
 ################
-outputdir='/sc/arion/projects/CommonMind/roussp01a/snmulti/cellstate/files/DE3/'
+
 for level in 'class','subclass','subtype':
-    get_combine_col(adata.obs,f'{level}','sampleDx',f'{level}person')
+    get_combine_col(adata.obs,f'{level}','sample',f'{level}person')
     pb_subclass,ncells=get_pseduobulk(adata,[f'{level}person'])    
     pbs,ncells=get_by_cell(pb_subclass,ncells, f'{level}person')
 
-    if os.path.exists(f'{outputdir}/DxRNA_{level}_pb_persample.h5'):
-        os.remove(f'{outputdir}/DxRNA_{level}_pb_persample.h5')
-    with pd.HDFStore(f'{outputdir}/DxRNA_{level}_pb_persample.h5') as store:
+    if os.path.exists(f'{outputdir}/{output_prefix}_{level}_pb_persample.h5'):
+        os.remove(f'{outputdir}/{output_prefix}_{level}_pb_persample.h5')
+    with pd.HDFStore(f'{outputdir}/{output_prefix}_{level}_pb_persample.h5') as store:
     # Write DataFrames to the file
         for x in ncells.keys():
             store.put(x+'/count_matrix',pbs[x])
             store.put(x+'/ncell',ncells[x])
+
+    logging.info(f"{output_prefix} pseudobulk at {outputdir}/{output_prefix}_{level}_pb_persample.h5")
+
