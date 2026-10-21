@@ -62,11 +62,6 @@ PsychAD-snMultiome/
 
 The **complete DEG and DAC results will be shared through Synapse**, rather than duplicated as large tables in GitHub. Where possible, these files will contain **all tested genes or chromatin features**, not just significant hits, with feature identifiers, the tested comparison and cell population, effect estimates, nominal and adjusted P values, and relevant model and annotation information. -->
 
-## citation
-Please cite the following:
-
-[Roussos, P., Dong, P., Cao, X., Kinrot, S., Casey, C., Hong, A., Alvia, M., Shao, Z., Krause-Massaguer, J., Haroutunian, V., Hoffman, G., Bendl, J., Lee, D., & Fullard, J. (2026). Coordinated cellular responses track cognitive outcomes in Alzheimer’s disease. In Research Square. Research Square.](https://doi.org/10.21203/rs.3.rs-11296978/v1)
-
 ## contact
 For questions regarding the analysis code, processed data, or computational methods, please contact:\
 Pengfei Dong\
