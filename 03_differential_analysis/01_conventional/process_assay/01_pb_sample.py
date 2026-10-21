@@ -13,6 +13,7 @@ parser.add_argument('--outDir', help='Output dir', required=True)
 parser.add_argument('--outPrefix', help='output prefix', required=True)
 parser.add_argument('--sampleCol', help='sampleID column', default='order')
 parser.add_argument('--ATAC', action='store_true', default=False) 
+parser.add_argument('--binarize', action='store_true', default=False) 
 args = parser.parse_args()
 sc.settings.verbosity = 3             # verbosity: errors (0), warnings (1), info (2), hints (3)
 sc.logging.print_header()
@@ -54,6 +55,8 @@ wnn_path=args.cellanno
 outputdir=args.outDir
 output_prefix=args.outPrefix
 adata=sc.read_h5ad(raw_path)
+if args.binarize:
+    adata.X.data[adata.X.data>1]=1
 wnn_cluster=pd.read_csv(wnn_path,index_col=0)
 if args.ATAC:
     wnn_cluser=wnn_cluster.loc[wnn_cluster.inATAC]

@@ -7,8 +7,8 @@ library(qvalue)
 library(cowplot)
 library(splines)
 # ATAC-seq peak run each major cell type indepdently
-# python process_assay/01_pb_sampleDx.py  --input {cell}.h5ad --Dx_cell lgb_anno.csv --outDir OUTDIR --outPrefix DxATAC_{cell}
-# Rscript process_assay/02_aggregateToPseudoBulk_rewrap.R {cell}.h5ad lgb_anno.csv path_metaInfo OUTDIR DxATAC_{cell}
+# python process_assay/01_pb_sampleDx.py  --input {cell}.h5ad --Dx_cell lgb_anno_ATAC.csv --outDir OUTDIR --outPrefix DxATAC_{cell} --binarize
+# Rscript process_assay/02_aggregateToPseudoBulk_rewrap.R {cell}.h5ad lgb_anno_ATAC.csv path_metaInfo OUTDIR DxATAC_{cell}
 
 read_big_csv <- function(fh,row1asrowname=T){
   library(data.table)
@@ -33,7 +33,7 @@ BR='all'
 OUTDIR='/sc/arion/projects/CommonMind/roussp01a/snmulti/cellstate/files/DE3/'
 prefix=paste0('DxATAC_',cell)
 Dx_dev_path='/sc/arion/projects/CommonMind/roussp01a/snmulti/cellstate/files/ML_cellstate3/Dx_dev_covadj.csv'
-Dx_cell_path='/sc/arion/projects/CommonMind/roussp01a/snmulti/step3/files/ML_cellstate3/lgb_anno.csv'
+Dx_cell_path='/sc/arion/projects/CommonMind/roussp01a/snmulti/step3/files/ML_cellstate3/lgb_anno_ATAC.csv'
 sampleCol='order'
 NCPU=8 # less CPU to save memory
 bpparam = MulticoreParam(NCPU)

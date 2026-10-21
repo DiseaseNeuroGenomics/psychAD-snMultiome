@@ -7,8 +7,10 @@ library(qvalue)
 library(cowplot)
 library(splines)
 # first run
-# python process_assay/01_pb_sampleDx.py  --input h5ad --Dx_cell lgb_anno.csv --outDir OUTDIR --outPrefix DxGS
-# Rscript process_assay/02_aggregateToPseudoBulk_rewrap.R h5ad lgb_anno.csv path_metaInfo OUTDIR DxGS
+# Dx_cell is from RNA-seq and filtered RNA-only cells
+# lgb_anno_ATAC.csv is lgb_anno.csv filtered out RNA-seq only nuclei
+# python process_assay/01_pb_sampleDx.py  --input h5ad --Dx_cell lgb_anno_ATAC.csv --outDir OUTDIR --outPrefix DxGS
+# Rscript process_assay/02_aggregateToPseudoBulk_rewrap.R h5ad lgb_anno_ATAC.csv path_metaInfo OUTDIR DxGS
 
 read_big_csv <- function(fh,row1asrowname=T){
   library(data.table)
@@ -32,7 +34,7 @@ BR='all'
 OUTDIR='/sc/arion/projects/CommonMind/roussp01a/snmulti/cellstate/files/DE3/'
 prefix='DxGS'
 Dx_dev_path='/sc/arion/projects/CommonMind/roussp01a/snmulti/cellstate/files/ML_cellstate3/Dx_dev_covadj.csv'
-Dx_cell_path='/sc/arion/projects/CommonMind/roussp01a/snmulti/step3/files/ML_cellstate3/lgb_anno.csv'
+Dx_cell_path='/sc/arion/projects/CommonMind/roussp01a/snmulti/step3/files/ML_cellstate3/lgb_anno_ATAC.csv'
 sampleCol='order'
 NCPU=32
 bpparam = MulticoreParam(32)

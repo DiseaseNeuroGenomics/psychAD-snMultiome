@@ -6,10 +6,7 @@ library(tidyverse)
 library(ggplot2)
 library(data.table)
 library(dplyr)
-library(missMDA)
-library(FactoMineR)
-library(zenith)
-
+library(lme4)
 bpparam = MulticoreParam(12)
 read_big_csv <- function(fh,row1asrowname=T){
   library(data.table)
@@ -69,7 +66,7 @@ rownames(genes)=genes$gene_name
 
 metaInfo=read_big_csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/DE/metadata/metaInfo.csv')
 #
-covariates=c("(1|SubID)",'BrainRegion','scale(DxPC1)',
+covariates=c("(1|SubID)",'BrainRegion','scale(Dx_donor)',
              "scale(n_genes_by_counts)","scale(pct_counts_ribo)",
              "scale(mito_genes)","scale(mito_ribo)",
              "scale(Age)", "Sex", "scale(PMI..min.)")
@@ -79,7 +76,7 @@ load('class/all/varpart.Rdata')
 GEX_VP=fit
 load('class/all.proc.Rdata')
 GEX_Vobj=proc
-load('class/all/DxPC1.Rdata')
+load('class/all/Dx_donor.Rdata')
 GEX_Dobj=fit
 
 Sel=data.frame()
@@ -91,9 +88,9 @@ for(cell in c('Astro','Micro_PVM','EN','IN','Oligo','OPC')){
   rowsh=names(fit1$Amean)
   colsh=rownames(fit1$design)
   cov=intersect(colnames(fit1$coefficients),
-                c('(Intercept)','DxPC1','BrainRegionBM-36','BrainRegionBM-44',
+                c('(Intercept)','sclae(Dx_donor)','BrainRegionBM-36','BrainRegionBM-44',
                   'BrainRegionBM-9/46','scale(n_genes_by_counts)','scale(mito_genes)',
-                  'scale(mito_ribo)','scale(Age)','SexMale','scale(PMI..min.)'))
+                  'scale(mito_ribo)','scale(Age)','SexFemale','SexMale','scale(PMI..min.)'))
   R=E[rowsh,colsh]-fit1$coefficients[rowsh,cov]%*%t(fit1$design[,cov])  
   vp=vp[order(-1*vp$SubID),]
   vp=vp[vp$gene%in%rownames(R),]
@@ -143,10 +140,6 @@ for(cell in c('Astro','Micro_PVM','EN','IN','Oligo','OPC')){
   sel=vp[vp$SubID>=quantile(vp$SubID,0.5),]$gene
   sel=sel[rowSums(reliab[sel,]>0)>0]
   Sel=rbind(Sel,data.frame(cell=cell,gene=sel,threshold='top50'))
-  
-  sel=vp$gene
-  sel=sel[rowSums(reliab[sel,]>0)>0]
-  Sel=rbind(Sel,data.frame(cell=cell,gene=sel,threshold='all'))
   ##############
 }
 system('pigz /sc/arion/projects/CommonMind/roussp01a/snmulti/DE/files/donor/new/*csv')
@@ -160,4 +153,5 @@ zdf=do.call(rbind,
                          threshold=x$threshold[1])
             }))
 write.csv(zdf,file='donor/new/chr_block.csv',row.names=F)
+
 

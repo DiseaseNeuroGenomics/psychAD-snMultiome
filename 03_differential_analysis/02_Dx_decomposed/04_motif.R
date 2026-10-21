@@ -56,7 +56,7 @@ OUTDIR='/sc/arion/projects/CommonMind/roussp01a/snmulti/cellstate/files/DE3/'
 prefix_peak=paste0('DxATAC_',cell)
 prefix=paste0('Dxchromvar_',cell)
 Dx_dev_path='/sc/arion/projects/CommonMind/roussp01a/snmulti/cellstate/files/ML_cellstate3/Dx_dev_covadj.csv'
-Dx_cell_path='/sc/arion/projects/CommonMind/roussp01a/snmulti/step3/files/ML_cellstate3/lgb_anno.csv'
+Dx_cell_path='/sc/arion/projects/CommonMind/roussp01a/snmulti/step3/files/ML_cellstate3/lgb_anno_ATAC.csv'
 metaInfo_path='/sc/arion/projects/CommonMind/roussp01a/snmulti/step2/files/metaInfo_11102023.csv'
 sampleCol='order'
 NCPU=8 # less CPU to save memory
@@ -127,15 +127,7 @@ res.proc@metadata$ncell=z[paste0(res.proc@metadata$sampleDx,'_',unlist(res.proc@
 proc=res.proc
 cdmk_folder(file.path(OUTDIR,prefix))
 save(proc,file='proc.Rdata')
-############
-form=~(1|BrainRegion)+(1|SubID)+scale(TSSEnrichment)+scale(nFrags)+(1|Sex)+scale(Age)+scale(Dx_cell)+scale(Dx_donor)
-res.proc <- processAssays(pb1, form,min.cells = 20, min.count = 4,min.prop = .05, BPPARAM = MulticoreParam(NCPU)) # peak is sparse
-z=reshape2::melt(do.call(rbind,pb1@int_colData$n_cells))
-rownames(z)=with(z,paste(Var1,Var2,sep='_'))
-proc@metadata$ncell=z[paste0(proc@metadata$sampleDx,'_',unlist(proc@metadata[,level])),]$value
-cdmk_folder(prefix)
-save(proc,file='proc.Rdata')
-#dreamlet
+######dreamlet####################
 covariates=c("(1|SubID)",'BrainRegion',
              "scale(TSSEnrichment)",
              "scale(nFrags)",'scale(logncell)',

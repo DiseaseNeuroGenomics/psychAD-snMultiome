@@ -54,7 +54,7 @@ PsychAD-snMultiome/
 | Resource | Contents | Access / status |
 | --- | --- | --- |
 | [MSSM PsychAD study on Synapse (syn52160016)](https://www.synapse.org/Synapse:syn52160016) | Raw and processed RNA/ATAC data, associated metadata and complete differential-analysis results | **Data submission in progress.** |
-| [PsychAD snMultiome UCSC Cell Browser](https://cells.ucsc.edu/?ds=psychad-snmultiome) | Interactive exploration of processed single-nucleus data and available annotations | Interactive browser (will be avaliable soon) |
+| [PsychAD snMultiome UCSC Cell Browser](https://cells.ucsc.edu/?ds=psychad-snmultiome) | Interactive exploration of processed single-nucleus data and available annotations | Interactive browser |
 | [Frozen Dx_cell models on Zenodo](https://zenodo.org/records/23190790) | Frozen model artifacts intended for reuse or projection of `Dx_cell` | Model record |
 
 
@@ -65,7 +65,7 @@ The **complete DEG and DAC results will be shared through Synapse**, rather than
 ## citation
 Please cite the following:
 ```
-[TBD]
+[Roussos, P., Dong, P., Cao, X., Kinrot, S., Casey, C., Hong, A., Alvia, M., Shao, Z., Krause-Massaguer, J., Haroutunian, V., Hoffman, G., Bendl, J., Lee, D., & Fullard, J. (2026). Coordinated cellular responses track cognitive outcomes in Alzheimer’s disease. In Research Square. Research Square.] (https://doi.org/10.21203/rs.3.rs-11296978/v1)
 ```
 ## contact
 For questions regarding the analysis code, processed data, or computational methods, please contact:\

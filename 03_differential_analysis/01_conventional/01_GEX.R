@@ -28,7 +28,7 @@ cdmk_folder <- function(folder){
 #########################################################
 level='class'
 BR='all'
-OUTDIR='/sc/arion/projects/CommonMind/roussp01a/snmulti/cellstate/files/DE3/'
+OUTDIR='/sc/arion/projects/CommonMind/roussp01a/snmulti/DE/files'
 prefix='RNA'
 cellanno_path='/sc/arion/projects/CommonMind/roussp01a/snmulti/step3/files/cell_anno_05092025_fixed3.csv'
 sampleCol='order'
@@ -140,9 +140,6 @@ for(x in 1:nrow(contrasts)){
   
   try(test())
 }
-##########################stacked assay #######################################
-bpparam = MulticoreParam(8) # use less cpu
-res.proc <- processAssays(pb.stack, form, min.count = 10,min.prop=0.01, BPPARAM = bpparam)
-form=~(1|Dx_cat_donor)+(1|Sex)+scale(Age)+scale(PMI..min.)+(1|SubID)+(1|BrainRegion)+(1|class)+ (1|class:stackedAssay)+scale(mito_genes)+scale(n_genes_by_counts)+scale(mito_ribo)
-varPart=fitVarPart(res.proc,form2, BPPARAM = bpparam)
-save(varPart,file='stackedassay_varpart.Rdata')
+
+
+
