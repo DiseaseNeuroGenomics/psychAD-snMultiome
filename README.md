@@ -65,7 +65,7 @@ The **complete DEG and DAC results will be shared through Synapse**, rather than
 ## citation
 Please cite the following:
 
-[Roussos, P., Dong, P., Cao, X., Kinrot, S., Casey, C., Hong, A., Alvia, M., Shao, Z., Krause-Massaguer, J., Haroutunian, V., Hoffman, G., Bendl, J., Lee, D., & Fullard, J. (2026). Coordinated cellular responses track cognitive outcomes in Alzheimer’s disease. In Research Square. Research Square.] (https://doi.org/10.21203/rs.3.rs-11296978/v1)
+[Roussos, P., Dong, P., Cao, X., Kinrot, S., Casey, C., Hong, A., Alvia, M., Shao, Z., Krause-Massaguer, J., Haroutunian, V., Hoffman, G., Bendl, J., Lee, D., & Fullard, J. (2026). Coordinated cellular responses track cognitive outcomes in Alzheimer’s disease. In Research Square. Research Square.](https://doi.org/10.21203/rs.3.rs-11296978/v1)
 
 ## contact
 For questions regarding the analysis code, processed data, or computational methods, please contact:\
