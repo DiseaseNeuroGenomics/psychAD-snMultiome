@@ -43,7 +43,7 @@ genes$filtered=genes$protein_coding & (!genes$ribo)& (!genes$mt) & genes$seqname
 rownames(genes)=genes$gene_name
 
 meta=read_big_csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/DE/metadata/psychAD_meta_PC1_pathonly.csv')
-MDx_dev=read_big_csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/cellstate/files/ML_cellstate3/Dx_dev.csv')
+MDx_dev=read_big_csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/cellstate/files/ML_cellstate3/Dx_dev_adj.csv')
 MInfo=read_big_csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/step2/files/allInfo_11102023.csv')
 rownames(MInfo)=MInfo$order
 Mlgb=read_big_csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/step3/files/ML_cellstate3/lgb_anno.csv')

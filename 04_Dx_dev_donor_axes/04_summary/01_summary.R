@@ -19,13 +19,6 @@ read_big_csv <- function(fh,row1asrowname=T){
   }
   return(dat)
 }
-clr <- function(counts, pseudocount = 0.5) {
-  if (!is.data.frame(counts) & !is.matrix(counts)) {
-    counts <- matrix(counts, nrow = 1)
-  }
-  
-  log(counts + pseudocount) - rowMeans(log(counts + pseudocount))
-}
 
 plot_fgsea_go <- function(
     ego,
@@ -287,15 +280,13 @@ lgb=read_big_csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/step3/files/ML
 lgb$celltype=lgb$subtype
 lgb[lgb$class%in%c('EN','IN'),]$celltype=lgb[lgb$class%in%c('EN','IN'),]$subclass
 
-
-metaInfo=read.csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/DE/metadata/metaInfo.csv',row.names=1)
+metaInfo=read.csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/step2/files/allInfo_11102023.csv',row.names=1)
 #######cell composition #########################################################################################
-anno=read_big_csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/step3/files/cell_anno.csv')
+anno=read_big_csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/step3/files/cell_anno_05092025_fixed3.csv')
 anno=anno[anno$inRNA,]
 anno=anno[anno$subtype!='ependA',]
 
-#####neuron loss#####
-
+####neuron loss#####
 Neu=anno[anno$class%in%c('EN'),]
 ncells=table(Neu$order,Neu$subclass)
 ncells=apply(ncells,2,c)
@@ -303,20 +294,15 @@ df=data.frame(vul=ncells[,c('EN_L2_3_IT')],
               nvul=rowSums(ncells)-ncells[,'EN_L2_3_IT'])
 cobj=crumblr(df)
 vul1=cobj
-topTable(dream(cobj,~scale(DxPC1)+Sex+scale(Age)+BrainRegion2+(1|SubID)+scale(PMI..min.)+scale(GWR) ,metaInfo[colnames(cobj),]),'scale(DxPC1)',Inf)
-topTable(dream(cobj,~scale(DxPC1)+Sex+scale(Age)+BrainRegion2+(1|SubID)+scale(PMI..min.) ,metaInfo[colnames(cobj),]),'scale(DxPC1)',Inf)
 ######
 Neu=lgb[lgb$class%in%c('IN'),]
-#ncells=table(Neu$order,Neu$subtype%in%c('IN_SST_L2_3','IN_SST_L3'))
-ncells=table(Neu$order,Neu$subtype%in%c('IN_SST_L2_3'))
+ncells=table(Neu$order,Neu$subclass%in%c('IN_SST'))
 colnames(ncells)=c('other','IN_SST')
 ncells=apply(ncells,2,c)
 df=data.frame(vul=ncells[,c('IN_SST')],
               nvul=rowSums(ncells)-ncells[,'IN_SST'])
 cobj=crumblr(df)
 vul2=cobj
-topTable(dream(cobj,~scale(DxPC1)+Sex+scale(Age)+BrainRegion2+(1|SubID)+scale(PMI..min.)+scale(GWR) ,metaInfo[colnames(cobj),]),'scale(DxPC1)',Inf)
-topTable(dream(cobj,~scale(DxPC1)+Sex+scale(Age)+BrainRegion2+(1|SubID)+scale(PMI..min.) ,metaInfo[colnames(cobj),]),'scale(DxPC1)',Inf)
 #####
 Neu=lgb[lgb$class%in%c('EN','IN'),]
 ncells=table(Neu$order,Neu$subclass)
@@ -325,8 +311,6 @@ df=data.frame(vul=rowSums(ncells[,c('EN_L2_3_IT','IN_SST')]),
               nvul=rowSums(ncells)-rowSums(ncells[,c('EN_L2_3_IT','IN_SST')]))
 cobj=crumblr(df)
 vul=cobj
-topTable(dream(cobj,~scale(DxPC1)+Sex+scale(Age)+BrainRegion2+(1|SubID)+scale(PMI..min.)+scale(GWR) ,metaInfo[colnames(cobj),]),'scale(DxPC1)',Inf)
-topTable(dream(cobj,~scale(DxPC1)+Sex+scale(Age)+BrainRegion2+(1|SubID)+scale(PMI..min.) ,metaInfo[colnames(cobj),]),'scale(DxPC1)',Inf)
 sh=intersect(colnames(vul1),colnames(vul2))
 vul_df=zdf=data.frame(EN=(vul1$E['vul',sh]),IN=(vul2$E['vul',sh]),
                       Neu=(vul$E['vul',sh]))
@@ -373,32 +357,10 @@ GEXs=lapply(GEXs,function(x){
 z=mapply(function(x,y){rownames(x)=paste0(y,":",rownames(x));x},GEXs,names(GEXs),SIMPLIFY = F)
 names(z)=NULL
 GEX=do.call(rbind,z)
-Obs=read_big_csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/step3/files/RNA_all_soupX_obs.csv.gz')
-CovInfo=as.data.frame(data.frame(Obs[rownames(lgb),],lgb[,c('class','order')])%>%group_by(class,order)%>%summarise(
-  n_genes_by_counts=mean(n_genes_by_counts),
-  pct_counts_ribo=mean(pct_counts_ribo),
-  mito_genes=mean(mito_genes)))
-CovInfo=do.call(rbind,lapply(split(CovInfo,CovInfo$class),function(x)data.frame(x[,1:2],scale(x[,3:5]))))
-CovInfos=lapply(list('EN','IN',c("EN",'IN'),c("Astro",'Oligo','OPC','Micro_PVM'),c("Astro",'Oligo','OPC','Micro_PVM','EN','IN')),function(x){
-  z=CovInfo[CovInfo$class%in%x,]
-  z=data.frame(z%>%pivot_wider(names_from=class,values_from=c(n_genes_by_counts,pct_counts_ribo,mito_genes)))
-  rownames(z)=z[,1]
-  z[,1]=NULL
-  z[rowSums(is.na(z))==0,]
-  
-})
-names(CovInfos)=c('EN','IN','Neu','Gli','All')
-for(x in c('Neu','Gli','All')){
-  z=CovInfos[[x]]
-  sv1=svd(z[,-1])
-  npc=which(cumsum(sv1$d^2/sum(sv1$d^2))>0.85)[1]
-  z=data.frame(sv1$u[,1:npc,drop=F],row.names=rownames(z))
-  colnames(z)=paste0(x,'_PC',1:npc)
-  CovInfos[[x]]=z
-}
+Obs=read_big_csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/step3/files/RNA_all_obs.csv.gz')
 
 ###psychAD
-load('/sc/arion/projects/CommonMind/roussp01a/snmulti/DE/files/MSSM/class/DxPC1.Rdata')
+load('/sc/arion/projects/CommonMind/roussp01a/snmulti/DE/files/MSSM/class/Dx_donor.Rdata')
 NcovInfo=do.call(rbind,lapply(c('Astro','Oligo','OPC','Immune','EN','IN'),function(cell){z=fit[[cell]]$data;
 data.frame(sample=rownames(z),assay=cell,scale(z[,c('n_genes','mito_genes','ribo_genes')]))}))
 NcovInfos=lapply(list('EN','IN',c("EN",'IN'),c("Astro",'Oligo','OPC','Immune'),c("Astro",'Oligo','OPC','Immune',"EN",'IN')),function(x){
@@ -436,8 +398,6 @@ load(sprintf('/sc/arion/projects/CommonMind/roussp01a/snmulti/DE/files/donor/new
 W=agg$consensus_weights
 Fs=agg$consensus_scores
 F_sel=paste0('Factor',1:3)
-
-
 
 #0. how much variance Expalined.
 pdf(sprintf('MOFA_summary_%s.pdf',nfactor),width=5,height = 5)
@@ -651,7 +611,7 @@ zInfo=data.frame(zInfo,data.frame(pfc)[rownames(zInfo),])
 xx1=zInfo[,c('Dx_dev','BrainRegion2',colnames(Fs))]
 zdf1=do.call(rbind,lapply(c(paste0('Factor',1:3)),
                          function(x)summary(lm(as.formula(sprintf('Dx_dev~DxPC1+Age+Sex+PMI..min.+scale(%s)',x)),zInfo))$coefficient[sprintf('scale(%s)',x),]))
-br='PHG'
+br='EC'
 zInfo=metaInfo[metaInfo$BrainRegion2==br,]
 zInfo$Dx_dev=rowMeans(scale(data.frame(Dx_dev)[rownames(zInfo),]),na.rm=T)
 zInfo=zInfo[!duplicated(zInfo$SubID),]
@@ -675,147 +635,11 @@ zdf$q=p.adjust(zdf$P,method='BH')
 write.csv(zdf,file='brainregion_factor_Dx_dev_asso.csv')
 write.csv(rbind(xx0,xx1,xx2),file='brainregion_F123_Dx_dev.csv')
 
-cmat=cor(Dx_dev,use='complete.obs',method='spearman')
-pdf(sprintf('Dx_dev_cor_cell_%s.pdf',nfactor),width=4,height = 4)
-corrplot::corrplot(cmat[c('Astro','Oligo','OPC','Micro_PVM','EN','IN'),c('Astro','Oligo','OPC','Micro_PVM','EN','IN')],
-                   col = rev(corrplot::COL2()),type = 'upper',method  = 'square',diag = FALSE)
-corrplot::corrplot.mixed(cmat[c('Astro','Oligo','OPC','Micro_PVM','EN','IN'),c('Astro','Oligo','OPC','Micro_PVM','EN','IN')],
-                         upper.col = rev(corrplot::COL2()),lower.col=rev(corrplot::COL2()),upper = 'square')
-dev.off()
-#barplot(cor(rowMeans(Dx_dev),data.frame(Fs)[metaInfo[rownames(Dx_dev),]$SubID,],use='complete.obs'),las=2)
-Dx_cell_agg=as.data.frame(lgb%>%group_by(order,class)%>%summarise(M=mean(Dx_cell))%>%pivot_wider(names_from=class,values_from=M))
-rownames(Dx_cell_agg)=Dx_cell_agg[,1]
-covs=c('n_genes_by_counts','pct_counts_ribo','mito_genes')
-Vp=data.frame()
-Dif=data.frame()
-for(cell in unique(lgb$class)){
-  lgb1=lgb[lgb$class==cell,]
-  agg1=as.data.frame(lgb1%>%group_by(order)%>%summarise(M=mean(Dx_cell),Dx_donor=mean(DxPC1)))
-  rownames(agg1)=agg1$order;agg1$order=NULL
-  
-  ncell=apply(table(lgb1$order,lgb1$Dx_cat_cell),2,c)
-  cobj=crumblr(ncell)
-  cobj$E=rbind(cobj$E,agg=scale(agg1[colnames(cobj),]$M)[,1])
-  cobj$weights=rbind(cobj$weights,agg=1)
-  covInfo=do.call(rbind,lapply(split(Obs[rownames(lgb1),covs],Obs[rownames(lgb1),'order']),colMeans))
-  
-  form=~scale(Age)+Sex+scale(DxPC1)+scale(PMI..min.)+BrainRegion+(1|SubID)+scale(n_genes_by_counts)+scale(pct_counts_ribo)+scale(mito_genes)+scale(Factor1)+scale(Factor2)+scale(Factor3)
-  vform= ~scale(Age)+(1|Sex)+(1|SubID)+scale(DxPC1)+scale(PMI..min.)+(1|BrainRegion)+scale(n_genes_by_counts)+scale(pct_counts_ribo)+scale(mito_genes)+scale(Factor1)+scale(Factor2)+scale(Factor3)
-  zInfo=data.frame(covInfo[colnames(cobj),],metaInfo[colnames(cobj),])
-  zInfo=data.frame(data.frame(Fs)[as.character(zInfo$SubID),],zInfo)
-  vp=fitExtractVarPartModel(cobj,vform,
-                            zInfo)
-  vp=data.frame(vp,ID=rownames(vp),assay=cell)
-  Vp=rbind(Vp,vp)
-  zfit=eBayes(dream(cobj,form,zInfo))
-  z1=topTable(zfit,'scale(Factor1)')
-  topTable(diffVar(zfit),'scale(Factor1)')
-  z2=topTable(zfit,'scale(Factor2)')
-  z3=topTable(zfit,'scale(Factor3)')
-  z4=topTable(zfit,'scale(DxPC1)')
-  Dif=rbind(Dif,
-            data.frame(z1,factor='Factor1',cell=cell,coef=rownames(z1)),
-            data.frame(z2,factor='Factor2',cell=cell,coef=rownames(z2)),
-            data.frame(z3,factor='Factor3',cell=cell,coef=rownames(z3)),
-            data.frame(z4,factor='Dx_donor',cell=cell,coef=rownames(z4)))
-}
-zdf=reshape2::melt(Vp[Vp$ID=='agg',c('scale.Factor1.','scale.Factor2.','scale.Factor3.','scale.DxPC1.','assay')],
-                   id.vars=c('assay'))
-pdf(sprintf('MOFA_Dx_dev_cellcompositoincor_%s.pdf',nfactor),width=5,height = 5)
-print(ggplot(zdf)+geom_bar(aes(x=assay,fill=variable,y=value),stat='identity')+
-        theme_bw()+ggtitle('Dx_cell var expalined')+
-        theme(axis.text.x = element_text(angle = 90,vjust = 1, hjust=1,colour = "black"),
-              axis.text.y = element_text(colour = "black"),
-              strip.background = element_rect(fill = NA),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank(),aspect.ratio = 1))
-####
-cmat=cor(Dx_dev,use='complete.obs',method='spearman')
-diag(cmat)=NA
-zdf1=reshape2::melt(cmat)
-zdf1$Var1=factor(zdf1$Var1,levels=c('Astro','Oligo','OPC','Micro_PVM','EN','IN'))
-zdf1$Var2=factor(zdf1$Var2,levels=c('Astro','Oligo','OPC','Micro_PVM','EN','IN'))
-corrplot::corrplot.mixed(cmat[c('Astro','Oligo','OPC','Micro_PVM','EN','IN'),c('Astro','Oligo','OPC','Micro_PVM','EN','IN')],
-                         upper.col = rev(corrplot::COL2()),upper='square')
-corrplot::corrplot(cmat[c('Astro','Oligo','OPC','Micro_PVM','EN','IN'),c('Astro','Oligo','OPC','Micro_PVM','EN','IN')],
-                   col = rev(corrplot::COL2()),type = 'upper',method  = 'square',diag = FALSE)
-print(ggplot(zdf1)+geom_tile(aes(x=Var1,y=Var2,fill=value))+
-        scale_fill_gradientn(colors=rev(RColorBrewer::brewer.pal(9,'RdBu')),limits=c(-1,1))+
-        scale_x_discrete(expand = c(0,0))+scale_y_discrete(expand = c(0,0))+
-        theme_bw()+coord_equal()+
-        theme(axis.text.x = element_text(angle = 45,vjust = 1, hjust=1,colour = "black"),
-              axis.text.y = element_text(colour = "black"),
-              strip.background = element_rect(fill = NA),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank()))
-
-zInfo=metaInfo[metaInfo$SubID%in%rownames(Fs),]
-zInfo$Dx_dev=rowMeans(scale(Dx_dev),na.rm=T)[rownames(zInfo)]
-rho_dx=cor(zInfo[,c('DxPC1','CERAD','BRAAK_AD','CDRScore','Dx_dev')],data.frame(Fs)[zInfo$SubID,],use='complete.obs',method='spearman')
-cmat=sapply(c('DxPC1','Dx_dev','Age'),function(x){
-  cor(data.frame(Fs)[zInfo$SubID,],zInfo[, x],use='complete.obs',method='spearman')
-})
-rownames(cmat)=colnames(Fs)
-zdf=reshape::melt(cmat)
-zdf$lab=round(zdf$value,2)
-zdf[abs(zdf$lab)<0.2,]$lab=''
-zdf$Fs=factor(zdf$X1,levels=colnames(Fs))
-zdf$coef=factor(zdf$X2,levels=c("DxPC1",'Dx_dev','Age'))
-print(ggplot(zdf)+
-        geom_tile(aes(y=Fs,x=coef,fill=value))+
-        geom_text(aes(y=Fs,x=coef,label=lab))+
-        #scale_fill_gradient2(low = "#3B4CC0",mid = "white",high = "#B40426",limits=c(-1,1),name = 'rho')+
-        scale_fill_gradientn(colors=rev(RColorBrewer::brewer.pal(9,'RdBu')),limits=c(-1,1))+
-        scale_x_discrete(expand = c(0,0))+scale_y_discrete(expand = c(0,0))+
-        theme_bw()+coord_equal()+
-        theme(axis.text.x = element_text(angle = 45,vjust = 1, hjust=1,colour = "black"),
-              axis.text.y = element_text(colour = "black")))
-print(ggplot(zdf[zdf$Fs%in%F_sel,])+
-        geom_tile(aes(y=Fs,x=coef,fill=value))+
-        geom_text(aes(y=Fs,x=coef,label=lab))+
-        #        scale_fill_gradient2(low = "#3B4CC0",mid = "white",high = "#B40426",limits=c(-1,1),name = 'rho')+
-        scale_fill_gradientn(colors=rev(RColorBrewer::brewer.pal(9,'RdBu')),limits=c(-1,1))+
-        scale_x_discrete(expand = c(0,0))+scale_y_discrete(expand = c(0,0))+
-        theme_bw()+coord_equal()+
-        theme(axis.text.x = element_text(angle = 45,vjust = 1, hjust=1,colour = "black"),
-              axis.text.y = element_text(colour = "black")))
-for(x in names(cobjs)){
-  cobj=cobjs[[x]]
-  
-  cmat=cor(data.frame(Fs)[metaInfo$SubID,],
-           data.frame(t(cobj$E))[rownames(metaInfo),],
-           use='complete.obs',method='spearman')
-  
-  zdf=reshape::melt(cmat)
-  zdf$lab=round(zdf$value,2)
-  zdf[abs(zdf$lab)<0.2,]$lab=''
-  zdf$Fs=factor(zdf$X1,levels=colnames(Fs))
-  print(ggplot(zdf)+
-          geom_tile(aes(y=Fs,x=X2,fill=value))+
-          geom_text(aes(y=Fs,x=X2,label=lab))+
-          #scale_fill_gradient2(low = "#3B4CC0",mid = "white",high = "#B40426",limits=c(-1,1),name = 'rho')+
-          scale_fill_gradientn(colors=rev(RColorBrewer::brewer.pal(9,'RdBu')),limits=c(-1,1))+
-          scale_x_discrete(expand = c(0,0))+scale_y_discrete(expand = c(0,0))+
-          theme_bw()+coord_equal()+ggtitle(x)+
-          theme(axis.text.x = element_text(angle = 45,vjust = 1, hjust=1,colour = "black"),
-                axis.text.y = element_text(colour = "black")))
-  print(ggplot(zdf[zdf$Fs%in%F_sel,])+
-          geom_tile(aes(y=Fs,x=X2,fill=value))+
-          geom_text(aes(y=Fs,x=X2,label=lab))+
-          #scale_fill_gradient2(low = "#3B4CC0",mid = "white",high = "#B40426",limits=c(-1,1),name = 'rho')+
-          scale_fill_gradientn(colors=rev(RColorBrewer::brewer.pal(9,'RdBu')),limits=c(-1,1))+
-          scale_x_discrete(expand = c(0,0))+scale_y_discrete(expand = c(0,0))+
-          theme_bw()+coord_equal()+ggtitle(x)+
-          theme(axis.text.x = element_text(angle = 45,vjust = 1, hjust=1,colour = "black"),
-                axis.text.y = element_text(colour = "black")))
-}
-dev.off()
 ###
 
 zInfo=metaInfo[metaInfo$SubID%in%rownames(Fs),]
 zInfo$Dx_dev=rowMeans(scale(Dx_dev),na.rm=T)[rownames(zInfo)]
 zInfo=data.frame(data.frame(Fs)[zInfo$SubID,],zInfo)
-
 m1=calcVarPart(lme4::lmer(Dx_dev~scale(Age)+(1|Sex)+scale(DxPC1)+scale(PMI..min.)+(1|SubID)+(1|APOE)+(1|BrainRegion2),zInfo,REML=F))
 m2=calcVarPart(lme4::lmer(Dx_dev~scale(Age)+(1|Sex)+scale(DxPC1)+scale(PMI..min.)+scale(Factor1)+scale(Factor2)+scale(Factor3)+(1|SubID)+(1|APOE)+(1|BrainRegion2),zInfo,REML=F))
 zdf=data.frame(vp=c(m1,m2),coef=c(names(m1),names(m2)),
@@ -862,129 +686,14 @@ z2=topTable(zfit2,'scale(Dx_dev)',number=Inf)
 write.csv(z0,file=sprintf('Dx_cell_subclass_crumblr_%s.csv',nfactor))
 write.csv(z1,file=sprintf('Dx_donor_subclass_crumblr_%s.csv',nfactor))
 write.csv(z2,file=sprintf('Dx_dev_subclass_crumblr_%s.csv',nfactor))
-#zdf=data.frame(cell=rownames(z1),Dx_donor=z1$t,Dx_dev=z2[rownames(z1),])
 
-z1$se=z1$logFC/z1$t
-z2$se=z2$logFC/z2$t
-zdf=data.frame(cell=rownames(z1),
-               Dx_donor=z1$logFC,donor_se=z1$se,
-               Dx_dev=z2[rownames(z1),]$logFC,
-               dev_se=z2[rownames(z1),]$se,
-               FDR=z2[rownames(z1),]$adj.P.Val)
-sig=c('','FDR sig')[(zdf$FDR<0.05)+1]
-col1=c('grey40','#B40426')
-names(col1)=c('','FDR sig')
-colorcode=read.csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/step3/files/color_code.csv',row.names=1)
-colormap_class=colorcode[unique(anno$subclass),]
-names(colormap_class)=unique(anno$subclass)
-log10range=c(2,5,10,15,20,25,30)
-pdf(sprintf('subclass_cell_composition_change_Dx_dev_vs_Dx_donor_%s.pdf',nfactor))
-print(ggplot(zdf)+
-        geom_smooth(aes(x=Dx_donor,y=Dx_dev),method='lm',linewidth = 0.7)+
-        geom_point(aes(x=Dx_donor,y=Dx_dev,size=-log10(FDR),color=cell))+
-        geom_linerange(aes(x=Dx_donor,ymin=Dx_dev-dev_se,ymax=Dx_dev+dev_se,color=cell),linewidth = 0.35)+
-        geom_linerange(aes(y=Dx_dev,xmin=Dx_donor-donor_se,xmax=Dx_donor+donor_se,color=cell),linewidth = 0.35)+
-        geom_hline(yintercept = 0,linetype = "dotted",linewidth = 0.5)+
-        geom_vline(xintercept = 0,linetype = "dotted",linewidth = 0.5)+
-        xlab('logFC (Dx_donor)')+ylab('logFC (Dx_dev)')+
-        ggtitle(paste0('rho ',round(cor(zdf$Dx_donor,zdf$Dx_dev,use='complete.obs',method='spearman'),2)))+
-        scale_color_manual(values=colormap_class)+
-        scale_size(breaks=log10range[log10range<max(-log10(zdf$FDR))])+
-        theme_bw()+
-        theme(axis.text.x = element_text(colour = "black"),
-              axis.text.y = element_text(colour = "black"),
-              strip.background = element_rect(fill = NA),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank(),aspect.ratio = 1))
-print(ggplot(zdf)+
-        geom_smooth(aes(x=Dx_donor,y=Dx_dev),method='lm',linewidth = 0.7)+
-        geom_point(aes(x=Dx_donor,y=Dx_dev,size=-log10(FDR),color=sig))+
-        geom_linerange(aes(x=Dx_donor,ymin=Dx_dev-dev_se,ymax=Dx_dev+dev_se,color=sig),linewidth = 0.35)+
-        geom_linerange(aes(y=Dx_dev,xmin=Dx_donor-donor_se,xmax=Dx_donor+donor_se,color=sig),linewidth = 0.35)+
-        geom_hline(yintercept = 0,linetype = "dotted",linewidth = 0.5)+
-        geom_vline(xintercept = 0,linetype = "dotted",linewidth = 0.5)+
-        xlab('logFC (Dx_donor)')+ylab('logFC (Dx_dev)')+
-        scale_size(breaks=log10range[log10range<max(-log10(zdf$FDR))])+
-        ggtitle(paste0('rho ',round(cor(zdf$Dx_donor,zdf$Dx_dev,use='complete.obs',method='spearman'),2)))+
-        geom_text_repel(aes(x=Dx_donor,y=Dx_dev,label=cell),
-                        color = "black",seed = 123, box.padding = 0.45,
-                        point.padding = 0.25,force = 2,force_pull = 0.1,
-                        max.overlaps = Inf,
-                        max.time = 5, min.segment.length = 0,
-                        segment.color = "grey35",linewidth = 0.3)+
-        scale_color_manual(values=col1)+
-        theme_bw()+
-        theme(axis.text.x = element_text(colour = "black"),
-              axis.text.y = element_text(colour = "black"),
-              strip.background = element_rect(fill = NA),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank(),aspect.ratio = 1))
-dev.off()
-pdf(sprintf('subclass_cell_composition_change_MOFA_vs_Dx_donor_%s.pdf',nfactor))
-for(xx in c('Factor1',"Factor2",'Factor3','Fmeta')){
+for(xx in c('Factor1',"Factor2",'Factor3')){
   form=as.formula(sprintf('~scale(Age)+Sex+BrainRegion2+scale(DxPC1)+scale(PMI..min.)+(1|SubID)+scale(%s)',xx))
   zfit=eBayes(dream(cobj,form,zInfo))
   z2=topTable(zfit,sprintf('scale(%s)',xx),number=Inf)
   write.csv(z2,file=sprintf('%s_subclass_crumblr_%s.csv',xx,nfactor))
-  z2$se=z2$logFC/z2$t
-  zdf=data.frame(cell=rownames(z1),
-                 Dx_donor=z1$logFC,donor_se=z1$se,
-                 Dx_dev=z2[rownames(z1),]$logFC,
-                 dev_se=z2[rownames(z1),]$se,
-                 FDR=z2[rownames(z1),]$adj.P.Val)
-  sig=c('','FDR sig')[(zdf$FDR<0.05)+1]
-  print(ggplot(zdf)+
-          geom_smooth(aes(x=Dx_donor,y=Dx_dev),method='lm',linewidth = 0.7)+
-          geom_point(aes(x=Dx_donor,y=Dx_dev,size=-log10(FDR),color=cell))+
-          geom_linerange(aes(x=Dx_donor,ymin=Dx_dev-dev_se,ymax=Dx_dev+dev_se,color=cell),linewidth = 0.35)+
-          geom_linerange(aes(y=Dx_dev,xmin=Dx_donor-donor_se,xmax=Dx_donor+donor_se,color=cell),linewidth = 0.35)+
-          geom_hline(yintercept = 0,linetype = "dotted",linewidth = 0.5)+
-          geom_vline(xintercept = 0,linetype = "dotted",linewidth = 0.5)+
-          xlab('logFC (Dx_donor)')+ylab(sprintf('logFC (%s)',xx))+
-          ggtitle(paste0('rho ',round(cor(zdf$Dx_donor,zdf$Dx_dev,use='complete.obs',method='spearman'),2)))+
-          scale_color_manual(values=colormap_class)+
-          scale_size(breaks=log10range[log10range<max(-log10(zdf$FDR))])+
-          theme_bw()+
-          theme(axis.text.x = element_text(colour = "black"),
-                axis.text.y = element_text(colour = "black"),
-                strip.background = element_rect(fill = NA),
-                panel.grid.major = element_blank(),
-                panel.grid.minor = element_blank(),aspect.ratio = 1))
-  print(ggplot(zdf)+
-          geom_smooth(aes(x=Dx_donor,y=Dx_dev),method='lm',linewidth = 0.7)+
-          geom_point(aes(x=Dx_donor,y=Dx_dev,size=-log10(FDR),color=sig))+
-          geom_linerange(aes(x=Dx_donor,ymin=Dx_dev-dev_se,ymax=Dx_dev+dev_se,color=sig),linewidth = 0.35)+
-          geom_linerange(aes(y=Dx_dev,xmin=Dx_donor-donor_se,xmax=Dx_donor+donor_se,color=sig),linewidth = 0.35)+
-          geom_hline(yintercept = 0,linetype = "dotted",linewidth = 0.5)+
-          geom_vline(xintercept = 0,linetype = "dotted",linewidth = 0.5)+
-          xlab('logFC (Dx_donor)')+ylab(sprintf('logFC (%s)',xx))+
-          ggtitle(paste0('rho ',round(cor(zdf$Dx_donor,zdf$Dx_dev,use='complete.obs',method='spearman'),2)))+
-          geom_text_repel(aes(x=Dx_donor,y=Dx_dev,label=cell),
-                          color = "black",seed = 123, box.padding = 0.45,
-                          point.padding = 0.25,force = 2,force_pull = 0.1,
-                          max.overlaps = Inf,
-                          max.time = 5, min.segment.length = 0,
-                          segment.color = "grey35",linewidth = 0.3)+
-          scale_color_manual(values=col1)+
-          scale_size(breaks=log10range[log10range<max(-log10(zdf$FDR))])+
-          theme_bw()+
-          theme(axis.text.x = element_text(colour = "black"),
-                axis.text.y = element_text(colour = "black"),
-                strip.background = element_rect(fill = NA),
-                panel.grid.major = element_blank(),
-                panel.grid.minor = element_blank(),aspect.ratio = 1))
 }
-dev.off()
-if(F){
-  form=~scale(Age)+Sex+BrainRegion2+scale(DxPC1)+scale(PMI..min.)+(1|SubID)+scale(Factor1)+scale(Factor2)+scale(Factor3)
-  zfit=eBayes(dream(cobj,form,zInfo))
-  z2=do.call(rbind,lapply(paste0('Factor',1:3),function(xx){
-    z=topTable(zfit,sprintf('scale(%s)',xx),number=Inf)
-    data.frame(coef=xx, cell=rownames(z),z)
-  }))
-  write.csv(z2,file=sprintf('%s_subclass_crumblr_%s.csv',xx,nfactor))
-  
-}
+
 ###################vul neurons only #####################################
 
 zInfo=metaInfo[colnames(Vul),]
@@ -1006,8 +715,7 @@ zdf1=data.frame(cell=rownames(z1),logFC=z1$logFC,se=z1$se,FDR=z1$adj.P.Val,
 df=zdf1
 write.csv(z0,file=sprintf('Dx_cell_vulneuron_crumblr_%s.csv',nfactor))
 write.csv(z1,file=sprintf('Dx_donor_vulneuron_crumblr_%s.csv',nfactor))
-pdf(sprintf('Vul_neuron_crumblr_%s.pdf',nfactor),width=5,height = 5)
-for(xx in c('Dx_dev','Factor1','Factor2','Factor3','Fmeta')){
+for(xx in c('Dx_dev','Factor1','Factor2','Factor3')){
   form1=as.formula(sprintf('~scale(Age)+Sex+BrainRegion2+scale(DxPC1)+scale(PMI..min.)+(1|SubID)+scale(%s)',xx))  
   zfit=eBayes(dream(Vul,form1,zInfo))
   z2=topTable(zfit,sprintf('scale(%s)',xx),number=Inf)
@@ -1018,39 +726,8 @@ for(xx in c('Dx_dev','Factor1','Factor2','Factor3','Fmeta')){
   df=rbind(df,zdf2)
   zdf=rbind(zdf1,zdf2)
   zdf$sig=c('','+')[(zdf$FDR<0.05)+1]
-  print(ggplot(zdf)+
-          geom_linerange(aes(x=group,ymin=logFC-se,ymax=logFC+se),linewidth = 0.35)+
-          geom_point(aes(x=group,y=logFC,size=-log10(FDR)))+
-          geom_text(aes(x=group,y=logFC,label=sig),color='white')+
-          scale_color_manual(values=col1)+
-          geom_hline(yintercept = 0,linetype = "dotted",linewidth = 0.5)+
-          xlab('')+ylab('logFC')+
-          scale_size(breaks=log10range[log10range<max(-log10(zdf$FDR))],limits = c(1,max(-log10(zdf$FDR))))+
-          theme_bw()+facet_wrap(~cell)+
-          theme(axis.text.x = element_text(angle = 45,vjust = 1, hjust=1,colour = "black"),
-                axis.text.y = element_text(colour = "black"),
-                strip.background = element_rect(fill = NA),
-                panel.grid.major = element_blank(),
-                panel.grid.minor = element_blank(),aspect.ratio = 2))
-  
 }
-df$sig=c('','+')[(df$FDR<0.05)+1]
-print(ggplot(df[df$group%in%c('Dx_donor','Factor1','Factor2','Factor3'),])+
-        geom_linerange(aes(x=group,ymin=logFC-se,ymax=logFC+se),linewidth = 0.35)+
-        geom_point(aes(x=group,y=logFC,size=-log10(FDR)))+
-        geom_text(aes(x=group,y=logFC,label=sig),color='white')+
-        scale_color_manual(values=col1)+
-        geom_hline(yintercept = 0,linetype = "dotted",linewidth = 0.5)+
-        xlab('')+ylab('logFC')+
-        scale_size(breaks=log10range[log10range<max(-log10(zdf$FDR))],limits = c(1,max(-log10(zdf$FDR))))+
-        theme_bw()+facet_wrap(~cell)+
-        theme(axis.text.x = element_text(angle = 45,vjust = 1, hjust=1,colour = "black"),
-              axis.text.y = element_text(colour = "black"),
-              strip.background = element_rect(fill = NA),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank(),aspect.ratio = 2))
-#####
-dev.off()
+
 ##### DAM####
 cobj=cobjs$Micro_PVM
 zInfo=metaInfo[colnames(cobj),]
@@ -1066,195 +743,29 @@ z0$se=z0$logFC/z0$t
 form0=~scale(Age)+Sex+BrainRegion2+scale(DxPC1)+scale(PMI..min.)+(1|SubID)
 zfit=eBayes(dream(cobj,form0,zInfo))
 z1=topTable(zfit,'scale(DxPC1)',number=Inf)
-z1$se=z1$logFC/z1$t
-zdf1=data.frame(cell=rownames(z1),logFC=z1$logFC,se=z1$se,FDR=z1$adj.P.Val,
-                group='Dx_donor')
-df=zdf1
+form0=~scale(Age)+Sex+BrainRegion2+scale(DxPC1)+scale(PMI..min.)+(1|SubID)+scale(Dx_dev)
+zfit=eBayes(dream(cobj,form0,zInfo))
+z2=topTable(zfit,'scale(Dx_dev)',number=Inf)
 write.csv(z0,file=sprintf('Dx_cell_Micro_PVM_crumblr_%s.csv',nfactor))
 write.csv(z1,file=sprintf('Dx_donor_Micro_PVM_crumblr_%s.csv',nfactor))
-pdf(sprintf('DAM_crumblr_%s.pdf',nfactor),width=5,height = 5)
-for(xx in c('Dx_dev','Factor1','Factor2','Factor3','Fmeta')){
-  form1=as.formula(sprintf('~scale(Age)+Sex+BrainRegion2+scale(DxPC1)+scale(PMI..min.)+(1|SubID)+scale(%s)',xx))  
-  zfit=eBayes(dream(cobj,form1,zInfo))
-  z2=topTable(zfit,sprintf('scale(%s)',xx),number=Inf)
-  write.csv(z2,file=sprintf('%s_DAM_crumblr_%s.csv',xx,nfactor))
-  z2$se=z2$logFC/z2$t
-  zdf2=data.frame(cell=rownames(z2),logFC=z2$logFC,se=z2$se,FDR=z2$adj.P.Val,
-                  group=xx)
-  df=rbind(df,zdf2)
-  zdf=rbind(zdf1,zdf2)
-  zdf$sig=c('','+')[(zdf$FDR<0.05)+1]
-  print(ggplot(zdf[zdf$cell=='DAM',])+
-          geom_linerange(aes(x=group,ymin=logFC-se,ymax=logFC+se),linewidth = 0.35)+
-          geom_point(aes(x=group,y=logFC,size=-log10(FDR)))+
-          geom_text(aes(x=group,y=logFC,label=sig),color='white')+
-          scale_color_manual(values=col1)+
-          geom_hline(yintercept = 0,linetype = "dotted",linewidth = 0.5)+
-          xlab('')+ylab('logFC')+
-          #scale_size(breaks=log10range[log10range<max(-log10(zdf$FDR))],limits = c(1,max(-log10(zdf$FDR))))+
-          theme_bw()+facet_wrap(~cell)+
-          theme(axis.text.x = element_text(angle = 45,vjust = 1, hjust=1,colour = "black"),
-                axis.text.y = element_text(colour = "black"),
-                strip.background = element_rect(fill = NA),
-                panel.grid.major = element_blank(),
-                panel.grid.minor = element_blank(),aspect.ratio = 2))
-  print(ggplot(zdf)+
-          geom_linerange(aes(x=group,ymin=logFC-se,ymax=logFC+se),linewidth = 0.35)+
-          geom_point(aes(x=group,y=logFC,size=-log10(FDR)))+
-          geom_text(aes(x=group,y=logFC,label=sig),color='white')+
-          scale_color_manual(values=col1)+
-          geom_hline(yintercept = 0,linetype = "dotted",linewidth = 0.5)+
-          xlab('')+ylab('logFC')+
-          #scale_size(breaks=log10range[log10range<max(-log10(zdf$FDR))],limits = c(1,max(-log10(zdf$FDR))))+
-          theme_bw()+facet_wrap(~cell)+
-          theme(axis.text.x = element_text(angle = 45,vjust = 1, hjust=1,colour = "black"),
-                axis.text.y = element_text(colour = "black"),
-                strip.background = element_rect(fill = NA),
-                panel.grid.major = element_blank(),
-                panel.grid.minor = element_blank(),aspect.ratio = 2))
-  
-}
-df$sig=c('','+')[(df$FDR<0.05)+1]
-print(ggplot(df[df$group%in%c('Dx_donor','Factor1','Factor2','Factor3'),])+
-        geom_linerange(aes(x=group,ymin=logFC-se,ymax=logFC+se),linewidth = 0.35)+
-        geom_point(aes(x=group,y=logFC,size=-log10(FDR)))+
-        geom_text(aes(x=group,y=logFC,label=sig),color='white')+
-        scale_color_manual(values=col1)+
-        geom_hline(yintercept = 0,linetype = "dotted",linewidth = 0.5)+
-        xlab('')+ylab('logFC')+
-        scale_size(breaks=log10range[log10range<max(-log10(zdf$FDR))],limits = c(1,max(-log10(zdf$FDR))))+
-        theme_bw()+facet_wrap(~cell)+
-        theme(axis.text.x = element_text(angle = 45,vjust = 1, hjust=1,colour = "black"),
-              axis.text.y = element_text(colour = "black"),
-              strip.background = element_rect(fill = NA),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank(),aspect.ratio = 2))
-print(ggplot(df[df$group%in%c('Dx_donor','Factor1','Factor2','Factor3') & df$cell=='DAM',])+
-        geom_linerange(aes(x=group,ymin=logFC-se,ymax=logFC+se),linewidth = 0.35)+
-        geom_point(aes(x=group,y=logFC,size=-log10(FDR)))+
-        geom_text(aes(x=group,y=logFC,label=sig),color='white')+
-        scale_color_manual(values=col1)+
-        geom_hline(yintercept = 0,linetype = "dotted",linewidth = 0.5)+
-        xlab('')+ylab('logFC')+
-        scale_size(breaks=log10range[log10range<max(-log10(zdf$FDR))],limits = c(1,max(-log10(zdf$FDR))))+
-        theme_bw()+facet_wrap(~cell)+
-        theme(axis.text.x = element_text(angle = 45,vjust = 1, hjust=1,colour = "black"),
-              axis.text.y = element_text(colour = "black"),
-              strip.background = element_rect(fill = NA),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank(),aspect.ratio = 2))
-#####
-dev.off()
-pdf(sprintf('Reilience_%s.pdf',nfactor),width=5,height = 5)
-#agg1=lgb%>%group_by(order,class)%>%summarise(Dx_cell=mean(Dx_cell))
-#agg1=reshape2::acast(agg1,order~class,value.var='Dx_cell')
-#z=rowMeans(scale(agg1),na.rm=T)
+write.csv(z2,file=sprintf('Dx_dev_Micro_PVM_crumblr_%s.csv',nfactor))
+
+
+
 z=rowMeans(scale(Dx_dev),na.rm=T)
 zInfo=data.frame(Dx_dev=z,Dx_cell=rowMeans(scale(Dx_cell_agg[,-1]),na.rm=T)[names(z)],
-                 control=rowMeans(class_mat[,grepl('control',colnames(class_mat))])[names(z)],
-                 late=rowMeans(class_mat[,grepl('late',colnames(class_mat))])[names(z)],
                  metaInfo[names(z),])
-
-zInfo=data.frame(zInfo,Fs[as.character(zInfo$SubID),])
-form=~scale(Age)+Sex+BrainRegion2+scale(DxPC1)+scale(PMI..min.)+scale(Cognitive_ResilienceUse)+(1|APOE)
-sh=zInfo[zInfo$SubID%in%rownames(Fs),]
-zfit1=dream(t(scale(Fs[sh$SubID,])),form,zInfo[rownames(sh),])
-z1=topTable(eBayes(zfit1),coef='scale(Cognitive_ResilienceUse)')
-
-
-write.csv(z1,file=sprintf('MOFA_Cognitive_Resilience_%s.csv',nfactor))
-zdf=data.frame(z1,cell=rownames(z1),se=z1$logFC/z1$t)
-zdf$sig=c('','+')[(zdf$adj.P.Val<0.05)+1]
-zdf$cell=factor(zdf$cell,levels=c('Fmeta',paste0('Factor',1:10)))
-print(ggplot(zdf)+
-        geom_linerange(aes(x=cell,ymin=logFC-se,ymax=logFC+se),linewidth = 0.35)+
-        geom_point(aes(x=cell,y=logFC,size=-log10(adj.P.Val)))+
-        geom_text(aes(x=cell,y=logFC,label=sig),color='white')+
-        #scale_color_manual(values=colormap_class)+
-        geom_hline(yintercept = 0,linetype = "dotted",linewidth = 0.5)+
-        xlab('')+ylab('logFC')+
-        theme_bw()+
-        theme(axis.text.x = element_text(angle = 45,vjust = 1, hjust=1,colour = "black"),
-              axis.text.y = element_text(colour = "black"),
-              strip.background = element_rect(fill = NA),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank()))
-
-print(ggplot(zdf[zdf$cell%in%c('Fmeta',paste0('Factor',1:3)),])+
-        geom_linerange(aes(x=cell,ymin=logFC-se,ymax=logFC+se),linewidth = 0.35)+
-        geom_point(aes(x=cell,y=logFC,size=-log10(adj.P.Val)))+
-        geom_text(aes(x=cell,y=logFC,label=sig),color='white')+
-        #scale_color_manual(values=colormap_class)+
-        geom_hline(yintercept = 0,linetype = "dotted",linewidth = 0.5)+
-        xlab('')+ylab('logFC')+
-        theme_bw()+
-        theme(axis.text.x = element_text(angle = 45,vjust = 1, hjust=1,colour = "black"),
-              axis.text.y = element_text(colour = "black"),
-              strip.background = element_rect(fill = NA),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank()))
-
-
-####
-
 
 form=~scale(Age)+Sex+BrainRegion2+scale(DxPC1)+scale(PMI..min.)+(1|SubID)+scale(Cognitive_ResilienceUse)+(1|APOE)
 zfit1=dream(t(scale(Dx_dev)),form,zInfo[rownames(Dx_dev),])
 z1=topTable(zfit1,coef='scale(Cognitive_ResilienceUse)')
 zdf=data.frame(z1,cell=rownames(z1),se=z1$logFC/z1$t)
 write.csv(z1,file=sprintf('Dx_devCognitive_Resilience_%s.csv',nfactor))
-colormap_class=colorcode[unique(zdf$cell),]
-names(colormap_class)=unique(zdf$cell)
-zdf$sig=c('','+')[(zdf$adj.P.Val<0.05)+1]
-zdf$cell=factor(zdf$cell,levels=c('Astro','Oligo','OPC','Micro_PVM','EN','IN'))
-print(ggplot(zdf)+
-        geom_linerange(aes(x=cell,ymin=logFC-se,ymax=logFC+se),linewidth = 0.35)+
-        geom_point(aes(x=cell,y=logFC,size=-log10(adj.P.Val)))+
-        geom_text(aes(x=cell,y=logFC,label=sig),color='white')+
-        #scale_color_manual(values=colormap_class)+
-        scale_size(limits=c(1,max(-log10(zdf$adj.P.Val))))+
-        geom_hline(yintercept = 0,linetype = "dotted",linewidth = 0.5)+
-        xlab('')+ylab('logFC')+
-        theme_bw()+
-        theme(axis.text.x = element_text(angle = 45,vjust = 1, hjust=1,colour = "black"),
-              axis.text.y = element_text(colour = "black"),
-              strip.background = element_rect(fill = NA),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank()))
-print(ggplot(zdf)+
-        geom_linerange(aes(x=cell,ymin=logFC-se,ymax=logFC+se),linewidth = 0.35)+
-        geom_point(aes(x=cell,y=logFC,size=-log10(adj.P.Val),color=cell))+
-        geom_text(aes(x=cell,y=logFC,label=sig),color='white')+
-        scale_color_manual(values=colormap_class)+
-        scale_size(limits=c(1,max(-log10(zdf$adj.P.Val))))+
-        geom_hline(yintercept = 0,linetype = "dotted",linewidth = 0.5)+
-        xlab('')+ylab('logFC')+
-        theme_bw()+
-        theme(axis.text.x = element_text(angle = 45,vjust = 1, hjust=1,colour = "black"),
-              axis.text.y = element_text(colour = "black"),
-              strip.background = element_rect(fill = NA),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank()))
-#zInfo$Dx_dev=rowMeans(scale(Dx_dev),na.rm=T)[rownames(zInfo)]
-zdf=zInfo[!is.na(zInfo$Cognitive_ResilienceUse),]
-zdf$group1=c('least','mid','resilience')[cut(zdf$Cognitive_ResilienceUse,c(-Inf,quantile(zdf$Cognitive_ResilienceUse,c(0.2,0.8)),Inf))]
-zdf$group2=c('other','resilience')[(zdf$Cognitive_ResilienceUse>quantile(zdf$Cognitive_ResilienceUse,0.8))+1]
-Dx_cutoff=read.csv('/sc/arion/projects/CommonMind/roussp01a/snmulti/DE/metadata/psychAD_meta_cutoff.csv',row.names=1)
-print(ggplot(zdf)+geom_smooth(aes(x=DxPC1,y=Dx_cell,color=group2))+
-        geom_vline(xintercept = Dx_cutoff$x,linetype=2)+
-        xlim(min(zInfo$DxPC1),max(zInfo$DxPC1))+
-        theme_bw()+
-        theme(axis.text.x = element_text(colour = "black"),
-              axis.text.y = element_text(colour = "black"),
-              strip.background = element_rect(fill = NA),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank(),aspect.ratio = 1))
-dev.off()
 
 
-################
-############
-if(T){
+
+#####################################
+
   library(AnnotationDbi)
   library(GOSemSim)
   library(fgsea)
@@ -1305,5 +816,4 @@ if(T){
                   cell_order=c('Astro','Oligo','OPC','Micro_PVM','EN','IN'))
   print(z$plot)
   dev.off()
-}
 

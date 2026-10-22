@@ -137,6 +137,7 @@ metaInfo=read.csv(metaInfo_path,row.names=1)
 Advar=read_obsvar(h5ad_path,'var')
 Adobs=read_obsvar(h5ad_path,'obs')
 anno=read_big_csv(cellanno_path)
+anno=anno[anno$subtype!='ependA',]
 if(ATAC){
   anno=anno[anno$inATAC,]  
 }else{

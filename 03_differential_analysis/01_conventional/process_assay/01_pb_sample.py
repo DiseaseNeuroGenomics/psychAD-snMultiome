@@ -58,6 +58,7 @@ adata=sc.read_h5ad(raw_path)
 if args.binarize:
     adata.X.data[adata.X.data>1]=1
 wnn_cluster=pd.read_csv(wnn_path,index_col=0)
+wnn_cluster=wnn_cluster.loc[~wnn_cluster.subtype.eq('ependA')]
 if args.ATAC:
     wnn_cluser=wnn_cluster.loc[wnn_cluster.inATAC]
 else:
